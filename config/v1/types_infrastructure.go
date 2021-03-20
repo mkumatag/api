@@ -108,7 +108,7 @@ const (
 )
 
 // PlatformType is a specific supported infrastructure provider.
-// +kubebuilder:validation:Enum="";AWS;Azure;BareMetal;GCP;Libvirt;OpenStack;None;VSphere;oVirt;IBMCloud;KubeVirt;EquinixMetal
+// +kubebuilder:validation:Enum="";AWS;Azure;BareMetal;GCP;Libvirt;OpenStack;None;VSphere;oVirt;IBMCloud;KubeVirt;EquinixMetal;PowerVS
 type PlatformType string
 
 const (
@@ -147,6 +147,9 @@ const (
 
 	// EquinixMetalPlatformType represents Equinix Metal infrastructure.
 	EquinixMetalPlatformType PlatformType = "EquinixMetal"
+
+	// PowerVSPlatformType represents PowerVS infrastructure.
+	PowerVSPlatformType PlatformType = "PowerVS"
 )
 
 // IBMCloudProviderType is a specific supported IBM Cloud provider cluster type
@@ -215,6 +218,10 @@ type PlatformSpec struct {
 	// EquinixMetal contains settings specific to the Equinix Metal infrastructure provider.
 	// +optional
 	EquinixMetal *EquinixMetalPlatformSpec `json:"equinixMetal,omitempty"`
+
+	// PowerVS contains settings specific to the PowerVS infrastructure provider.
+	// +optional
+	PowerVS *PowerVSPlatformSpec `json:"powervs,omitempty"`
 }
 
 // PlatformStatus holds the current status specific to the underlying infrastructure provider
@@ -273,6 +280,10 @@ type PlatformStatus struct {
 	// EquinixMetal contains settings specific to the Equinix Metal infrastructure provider.
 	// +optional
 	EquinixMetal *EquinixMetalPlatformStatus `json:"equinixMetal,omitempty"`
+
+	// PowerVS contains settings specific to the PowerVS infrastructure provider.
+	// +optional
+	PowerVS *PowerVSPlatformStatus `json:"powervs,omitempty"`
 }
 
 // AWSServiceEndpoint store the configuration of a custom url to
@@ -463,6 +474,31 @@ type VSpherePlatformStatus struct {
 	// nodes. Unlike the one managed by the DNS operator, `NodeDNSIP`
 	// provides name resolution for the nodes themselves. There is no DNS-as-a-service for
 	// vSphere deployments. In order to minimize necessary changes to the
+	// datacenter DNS, a DNS service is hosted as a static pod to serve those hostnames
+	// to the nodes in the cluster.
+	NodeDNSIP string `json:"nodeDNSIP,omitempty"`
+}
+
+// PowerVSPlatformSpec holds the desired state of the PowerVS infrastructure provider.
+// This only includes fields that can be modified in the cluster.
+type PowerVSPlatformSpec struct{}
+
+// PowerVSPlatformStatus holds the current status of the PowerVS infrastructure provider.
+type PowerVSPlatformStatus struct {
+	// apiServerInternalIP is an IP address to contact the Kubernetes API server that can be used
+	// by components inside the cluster, like kubelets using the infrastructure rather
+	// than Kubernetes networking. It is the IP that the Infrastructure.status.apiServerInternalURI
+	// points to. It is the IP for a self-hosted load balancer in front of the API servers.
+	APIServerInternalIP string `json:"apiServerInternalIP,omitempty"`
+
+	// ingressIP is an external IP which routes to the default ingress controller.
+	// The IP is a suitable target of a wildcard DNS record used to resolve default route host names.
+	IngressIP string `json:"ingressIP,omitempty"`
+
+	// nodeDNSIP is the IP address for the internal DNS used by the
+	// nodes. Unlike the one managed by the DNS operator, `NodeDNSIP`
+	// provides name resolution for the nodes themselves. There is no DNS-as-a-service for
+	// PowerVS deployments. In order to minimize necessary changes to the
 	// datacenter DNS, a DNS service is hosted as a static pod to serve those hostnames
 	// to the nodes in the cluster.
 	NodeDNSIP string `json:"nodeDNSIP,omitempty"`
